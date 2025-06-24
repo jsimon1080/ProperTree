@@ -5,28 +5,17 @@ from collections import OrderedDict, deque
 from io import BytesIO
 from Scripts import config_tex_info, plist
 
-try:
-    # Python 2
-    import Tkinter as tk
-    import ttk
-    import tkFileDialog as fd
-    import tkMessageBox as mb
-    from tkFont import Font
-    from itertools import izip_longest as izip
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    import tkinter as tk
-    import tkinter.ttk as ttk
-    from tkinter import filedialog as fd
-    from tkinter import messagebox as mb
-    from tkinter.font import Font
-    from itertools import zip_longest as izip
+import tkinter as tk
+import tkinter.ttk as ttk
+from tkinter import filedialog as fd
+from tkinter import messagebox as mb
+from tkinter.font import Font
+from itertools import zip_longest as izip
 
-    long = int
-    unicode = str
-    basestring = str
-    from io import StringIO
+long = int
+unicode = str
+basestring = str
+from io import StringIO
 
 
 class EntryPlus(ttk.Entry):
@@ -445,6 +434,32 @@ class EntryPopup(EntryPlus):
 
 
 class PlistWindow(tk.Toplevel):
+    def on_ctrl_click(self, event):
+        # Handle Ctrl+single-click (or Command+single-click on macOS) to jump to UID references
+        rowid = self._tree.identify_row(event.y)
+        column = self._tree.identify_column(event.x)
+        if not rowid or not self._tree.bbox(rowid):
+            return "break"
+        index = int(column.replace("#", ""))
+        try:
+            t = self.get_check_type(rowid)
+        except:
+            t = ""
+        if index == 2 and t and t.lower() == "uid":
+            try:
+                values = self._tree.item(rowid, "values")
+                uid_value = values[1] if len(values) > 1 else values[0]
+                uid_str = str(uid_value)
+                if uid_str.startswith("UID "):
+                    parts = uid_str.split()
+                    if len(parts) >= 2:
+                        uid_index = int(parts[1])
+                        if self.jump_to_uid_reference(uid_index):
+                            return "break"
+            except (ValueError, IndexError):
+                pass
+        return None
+
     def __init__(self, controller, root, **kw):
         tk.Toplevel.__init__(self, root, **kw)
         self.plist_header = """<?xml version="1.0" encoding="UTF-8"?>
@@ -619,8 +634,11 @@ class PlistWindow(tk.Toplevel):
         if str(sys.platform) == "darwin":
             self._tree.bind("<ButtonRelease-2>", self.popup)  # ButtonRelease-2 on mac
             self._tree.bind("<Control-ButtonRelease-1>", self.popup)  # Ctrl+Left Click on mac
+            self._tree.bind("<Command-Button-1>", self.on_ctrl_click)
+            self._tree.bind("<Control-Button-1>", self.on_ctrl_click)
         else:
             self._tree.bind("<ButtonRelease-3>", self.popup)
+            self._tree.bind("<Control-Button-1>", self.on_ctrl_click)
 
         # Set bindings
         self._tree.bind("<Double-1>", self.on_double_click)
@@ -3474,8 +3492,8 @@ class PlistWindow(tk.Toplevel):
                 # Got a UID - ensure it's within the unsigned 32-bit int bounds
                 value = value["CF$UID"]
                 display_value = self.get_uid_reference_display(value)
-                # Add tag for clickable UIDs
-                uid_tags = ["uid_clickable"] if self.is_uid_clickable(value) else ["uid_non_clickable"]
+                # Always add clickable tag for UIDs
+                uid_tags = ["uid_clickable"]
                 self._tree.item(
                     i,
                     values=(
@@ -3544,10 +3562,9 @@ class PlistWindow(tk.Toplevel):
                 ),
             )
         elif isinstance(value, plist.UID) or (hasattr(plistlib, "UID") and isinstance(value, plistlib.UID)):
-            # Enhanced UID display - show referenced value or make it clickable
+            # Enhanced UID display - always clickable
             display_value = self.get_uid_reference_display(value.data)
-            # Add tag for clickable UIDs
-            uid_tags = ["uid_clickable"] if self.is_uid_clickable(value.data) else ["uid_non_clickable"]
+            uid_tags = ["uid_clickable"]
             self._tree.item(
                 i,
                 values=(
@@ -3682,7 +3699,7 @@ class PlistWindow(tk.Toplevel):
                 # Consider it clickable if it's a dictionary or array type
                 if referenced_type in ("dictionary", "array"):
                     return True
-            
+
             # Also check if it has children (fallback for edge cases)
             children = self._tree.get_children(referenced_node)
             return len(children) > 0
@@ -4585,6 +4602,7 @@ class PlistWindow(tk.Toplevel):
             pt = ""
         # Robust Ctrl detection: works for Windows, Mac, Linux, and all event types
         import sys
+
         ctrl_pressed = False
         if sys.platform == "darwin":
             # Mac: Check for Command key (0x10000) or Control key (0x4)
@@ -4609,24 +4627,21 @@ class PlistWindow(tk.Toplevel):
                 # Can't edit the "value" directly - should only show the number of children
                 return "break"
             elif t and t.lower() == "uid":
-                # Handle UID reference click - only jump to referenced node if Ctrl is pressed
+                # Handle UID reference click - always try to jump if Ctrl is pressed
                 if ctrl_pressed:
                     try:
                         values = self._tree.item(rowid, "values")
-                        if len(values) > 1:
-                            uid_value = values[1]
-                            # Extract the UID index from various formats:
-                            # "UID 123", "UID 123 (value)", "UID 123 → (N items)"
-                            uid_str = str(uid_value)
-                            if uid_str.startswith("UID "):
-                                # Extract the number after "UID "
-                                parts = uid_str.split()
-                                if len(parts) >= 2:
-                                    uid_index = int(parts[1])
-                                    # Check if this UID is clickable before attempting to jump
-                                    if self.is_uid_clickable(uid_index):
-                                        if self.jump_to_uid_reference(uid_index):
-                                            return "break"  # Successfully jumped, prevent further processing
+                        # Always use the value column for UID display
+                        uid_value = values[1] if len(values) > 1 else values[0]
+                        # Extract the UID index from various formats:
+                        # "UID 123", "UID 123 (value)", "UID 123 → (N items)"
+                        uid_str = str(uid_value)
+                        if uid_str.startswith("UID "):
+                            parts = uid_str.split()
+                            if len(parts) >= 2:
+                                uid_index = int(parts[1])
+                                if self.jump_to_uid_reference(uid_index):
+                                    return "break"  # Successfully jumped, prevent further processing
                     except (ValueError, IndexError):
                         pass  # If parsing fails, fall through to normal editing
                 # If Ctrl not pressed, fall through to normal editing
