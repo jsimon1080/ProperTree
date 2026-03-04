@@ -3456,15 +3456,24 @@ class PlistWindow(tk.Toplevel):
             plist_data = plist.loads(
                 clip, dict_type=dict if self.controller.settings.get("sort_dict", False) else OrderedDict
             )
-                    # Let's get all lines that aren't headers/footers
+        except:
+            # initial load failed -- attempt to massage the clipboard text
+            # Let's get all lines that aren't headers/footers
             clip = "\n".join([c for c in clip.strip().split("\n") if not c.startswith(("<?","<!","<plist ","</plist>"))]).strip()
             corrected = self._walk_tags(clip)
             if corrected is not None:
                 clip = corrected
-            cb_list = [self.plist_header,clip,self.plist_footer]
-            # If we start with a key, assume it's a dict.  If we don't start with an array but have multiple newline-delimited elements, assume an array
-            # - for all else, let the type remain
-            element_type = "dict" if clip.startswith("<key>") else "array" if not clip.startswith(("<array>","<dict>")) and len(clip.split("\n")) > 1 else None
+            cb_list = [self.plist_header, clip, self.plist_footer]
+            # If we start with a key, assume it's a dict.  If we don't start with
+            # an array but have multiple newline-delimited elements, assume an
+            # array - for all else, let the type remain
+            element_type = (
+                "dict"
+                if clip.startswith("<key>")
+                else "array"
+                if not clip.startswith(("<array>", "<dict>")) and len(clip.split("\n")) > 1
+                else None
+            )
 
             if element_type:
                 cb_list.insert(1, "<{}>".format(element_type))
