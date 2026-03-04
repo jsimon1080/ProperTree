@@ -1,5 +1,16 @@
 #!/usr/bin/env python
-import sys, os, binascii, base64, json, re, subprocess, webbrowser, multiprocessing, signal, ctypes
+import binascii
+import base64
+import ctypes
+import json
+import multiprocessing
+import os
+import re
+import signal
+import subprocess
+import sys
+import webbrowser
+
 from collections import OrderedDict
 try:
     import Tkinter as tk
