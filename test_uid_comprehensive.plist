@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$version</key>
+	<integer>100000</integer>
+	<key>$objects</key>
+	<array>
+		<string>$null</string>
+		<string>Name</string>
+		<string>John Doe</string>
+		<integer>42</integer>
+		<real>3.14159</real>
+		<dict>
+			<key>type</key>
+			<string>person</string>
+			<key>active</key>
+			<true/>
+		</dict>
+		<array>
+			<string>apple</string>
+			<string>banana</string>
+			<string>cherry</string>
+		</array>
+		<string>metadata</string>
+		<dict>
+			<key>version</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+	<key>$top</key>
+	<dict>
+		<key>root</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>5</integer>
+		</dict>
+	</dict>
+	<key>testRefs</key>
+	<dict>
+		<key>nameRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>2</integer>
+		</dict>
+		<key>ageRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>3</integer>
+		</dict>
+		<key>piRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>4</integer>
+		</dict>
+		<key>personRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>5</integer>
+		</dict>
+		<key>fruitsRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>6</integer>
+		</dict>
+		<key>metadataRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>8</integer>
+		</dict>
+	</dict>
+</dict>
+</plist>

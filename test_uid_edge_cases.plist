@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$version</key>
+	<integer>100000</integer>
+	<key>$objects</key>
+	<array>
+		<string>$null</string>
+		<string>Valid String</string>
+		<integer>123</integer>
+	</array>
+	<key>$top</key>
+	<dict>
+		<key>root</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>testEdgeCases</key>
+	<dict>
+		<key>validRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>1</integer>
+		</dict>
+		<key>validRef2</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>2</integer>
+		</dict>
+		<key>invalidRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>99</integer>
+		</dict>
+		<key>negativeRef</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>-1</integer>
+		</dict>
+	</dict>
+</dict>
+</plist>
