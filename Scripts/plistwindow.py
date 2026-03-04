@@ -351,7 +351,7 @@ class EntryPopup(EntryPlus):
             if not self.master.edited:
                 # Reflect that we're Edited if needed
                 self.master.edited = True
-                self.master.title(self.master.title()+" - Edited")
+                self.master.title(self.master.title() + " - Edited")
 
     def confirm(self, event=None, no_prompt=False):
         if not self.winfo_exists():
@@ -383,18 +383,15 @@ class EntryPopup(EntryPlus):
                     return self.confirm_clear_and_focus()
             # Add to undo stack
             undo = {
-                "type":"edit",
-                "cell":self.cell,
-                "text":self.parent.item(self.cell,"text"),
-                "values":self.parent.item(self.cell,"values")
+                "type": "edit",
+                "cell": self.cell,
+                "text": self.parent.item(self.cell, "text"),
+                "values": self.parent.item(self.cell, "values"),
             }
             # No matches, should be safe to set
             self.parent.item(self.cell, text=self.get())
             # Make sure we check if we're edited
-            self.check_edited(
-                text,
-                undo=undo
-            )
+            self.check_edited(text, undo=undo)
         else:
             # Need to walk the values and pad
             values = self.parent.item(self.cell)["values"] or []
@@ -425,20 +422,14 @@ class EntryPopup(EntryPlus):
             # Set the value to the new output
             value = output[1]
             # Add to undo stack
-            undo = {
-                "type":"edit",
-                "cell":self.cell,
-                "text":self.parent.item(self.cell,"text"),
-                "values":original
-            }
+            undo = {"type": "edit", "cell": self.cell, "text": self.parent.item(self.cell, "text"), "values": original}
             # Replace our value (may be slightly modified)
             values[index - 1] = value
             # Set the values
             self.parent.item(self.cell, values=values)
             # Make sure we check if we're edited
             self.check_edited(
-                value.replace("<","").replace(">","") if type_value.lower() == "data" else value,
-                undo=undo
+                value.replace("<", "").replace(">", "") if type_value.lower() == "data" else value, undo=undo
             )
 
         # Call cancel to close the popup as we're done editing
@@ -1231,27 +1222,27 @@ class PlistWindow(tk.Toplevel):
             cell = "" if not len(self._tree.selection()) else self._tree.selection()[0]
         # Get the type of the cell
         if self.get_check_type(cell).lower() != "data":
-            return "break" # Not data
+            return "break"  # Not data
         # Parse the value into bytes
         try:
             original_value = self.get_value_from_node(cell)
             if len(original_value) < 2:
-                return "break" # Nothing to reverse
+                return "break"  # Nothing to reverse
             value = self.get_data(original_value[::-1])
-            values = self.get_padded_values(cell,3)
+            values = self.get_padded_values(cell, 3)
             undo_dict = {
-                "type":"edit",
-                "cell":cell,
-                "text":self._tree.item(cell,"text"),
-                "values":[x for x in values]
+                "type": "edit",
+                "cell": cell,
+                "text": self._tree.item(cell, "text"),
+                "values": [x for x in values],
             }
             values[1] = value
-            self._tree.item(cell,values=values)
+            self._tree.item(cell, values=values)
             self.add_undo(undo_dict)
             self._ensure_edited()
         except Exception as e:
             self.bell()
-            mb.showerror("Error Reversing Endianness",e,parent=self)
+            mb.showerror("Error Reversing Endianness", e, parent=self)
         return "break"
 
     def draw_frames(self, event=None, changed=None):
@@ -2044,8 +2035,9 @@ class PlistWindow(tk.Toplevel):
         for path, subdirs, files in os.walk(oc_kexts):
             if not path_is_valid(path):
                 continue
-            for name in sorted(subdirs, key=lambda x:x.lower()):
-                if name.startswith(".") or not name.lower().endswith(".kext"): continue
+            for name in sorted(subdirs, key=lambda x: x.lower()):
+                if name.startswith(".") or not name.lower().endswith(".kext"):
+                    continue
 
                 kdict = {
                     # "Arch":"Any",
@@ -2061,13 +2053,15 @@ class PlistWindow(tk.Toplevel):
                     kdict[y] = kext_add[y]
                 # Get the Info.plist
                 plist_full_path = plist_rel_path = None
-                for kpath, ksubdirs, kfiles in os.walk(os.path.join(path,name)):
+                for kpath, ksubdirs, kfiles in os.walk(os.path.join(path, name)):
                     if not path_is_valid(kpath):
                         continue
                     for kname in kfiles:
                         if kname.lower() == "info.plist":
-                            plist_full_path = os.path.join(kpath,kname)
-                            plist_rel_path  = plist_full_path[len(os.path.join(path,name)):].replace("\\", "/").lstrip("/")
+                            plist_full_path = os.path.join(kpath, kname)
+                            plist_rel_path = (
+                                plist_full_path[len(os.path.join(path, name)) :].replace("\\", "/").lstrip("/")
+                            )
 
                             break
                     if plist_full_path:
@@ -2094,27 +2088,31 @@ class PlistWindow(tk.Toplevel):
                             x.lower() for x in info_plist.get("OSBundleLibraries", []) if isinstance(x, basestring)
                         ],  # Case insensitive
                     }
-                    if info_plist.get("CFBundleExecutable",None):
-                        exec_rel_path  = None
-                        exec_full_path = os.path.join(path,name,"Contents","MacOS",info_plist["CFBundleExecutable"])
+                    if info_plist.get("CFBundleExecutable", None):
+                        exec_rel_path = None
+                        exec_full_path = os.path.join(path, name, "Contents", "MacOS", info_plist["CFBundleExecutable"])
                         if os.path.exists(exec_full_path):
                             # Found it in the usual spot
-                            exec_rel_path = "Contents/MacOS/"+info_plist["CFBundleExecutable"]
+                            exec_rel_path = "Contents/MacOS/" + info_plist["CFBundleExecutable"]
                         else:
                             # Didn't find it in the usual spot - check for it anywhere in the kext
                             cfbundle_lower = info_plist["CFBundleExecutable"].lower()
                             exec_rel_path = exec_full_path = None
-                            for kpath, ksubdirs, kfiles in os.walk(os.path.join(path,name)):
+                            for kpath, ksubdirs, kfiles in os.walk(os.path.join(path, name)):
                                 if not path_is_valid(kpath):
                                     continue
                                 for kname in kfiles:
                                     if kname.lower() == cfbundle_lower:
-                                        exec_full_path = os.path.join(kpath,kname)
-                                        exec_rel_path  = exec_full_path[len(os.path.join(path,name)):].replace("\\", "/").lstrip("/")
+                                        exec_full_path = os.path.join(kpath, kname)
+                                        exec_rel_path = (
+                                            exec_full_path[len(os.path.join(path, name)) :]
+                                            .replace("\\", "/")
+                                            .lstrip("/")
+                                        )
                                         break
                         if not exec_rel_path or not exec_full_path or not os.path.getsize(exec_full_path):
                             omitted_kexts.append(name)
-                            continue # Requires an executable that doesn't exist - bail
+                            continue  # Requires an executable that doesn't exist - bail
                         # Found something
                         kdict["ExecutablePath"] = exec_rel_path
 
@@ -2213,8 +2211,7 @@ class PlistWindow(tk.Toplevel):
             mb.showwarning(
                 "Cyclic Kext Dependencies",
                 "The following kexts have been omitted from the snapshot for cyclic dependencies:\n\n{}".format(
-                    "\n".join([x.get("BundlePath","") for x in cyclic_kexts])
-
+                    "\n".join([x.get("BundlePath", "") for x in cyclic_kexts])
                 ),
                 parent=self,
             )
@@ -3392,18 +3389,18 @@ class PlistWindow(tk.Toplevel):
         for tag in tag_search.finditer(data):
             tag_text = tag.group(0)
             if tag_text[1] == "/":
-                open_tag = tag_text.replace("/","")
+                open_tag = tag_text.replace("/", "")
                 # Got a closing tag - make sure it matches the last
                 # opening tag - or prepend the opening tag
                 if not len(tag_stack):
                     if last_open is None:
-                        opening_tags.insert(0,open_tag)
+                        opening_tags.insert(0, open_tag)
                     continue
                 last_tag = tag_stack.pop()
                 if last_tag != open_tag:
                     # Doesn't match - scope is wrong
                     tag_stack.append(last_tag)
-                    opening_tags.insert(0,open_tag)
+                    opening_tags.insert(0, open_tag)
                 elif not len(tag_stack):
                     # We left our scope entirely
                     parent_tag = "array"
@@ -3412,34 +3409,34 @@ class PlistWindow(tk.Toplevel):
                 if tag_text == "<key>" and last_open is None:
                     # Prepend a dict open tag
                     tag_stack.appendleft("<dict>")
-                    opening_tags.insert(0,"<dict>")
+                    opening_tags.insert(0, "<dict>")
                 # Add the open tag and retain it
                 tag_stack.append(tag_text)
                 last_open = tag_text
         # If we made it through - check if we need anything
-        if not any((opening_tags,tag_stack,tags_to_remove)) and parent_tag is None:
+        if not any((opening_tags, tag_stack, tags_to_remove)) and parent_tag is None:
             return None
         # Walk the orphaned tags and return their closing elements
         closing_tags = []
         while tag_stack:
             orphan = tag_stack.pop()
             if orphan[1] != "/":
-                closing_tags.append("</"+orphan[1:])
+                closing_tags.append("</" + orphan[1:])
         # Adjust the original data as needed to strip any leading
         # tags that close missing elements
         adj = 0
         for t in tags_to_remove:
-            start,end = t.span()
-            data = data[:start-adj]+data[end-adj:]
-            adj += end-start
+            start, end = t.span()
+            data = data[: start - adj] + data[end - adj :]
+            adj += end - start
         # If we bailed on scope - wrap things in an array
         if parent_tag is not None:
-            opening_tags.insert(0,"<array>")
+            opening_tags.insert(0, "<array>")
             closing_tags.append("</array>")
         # Return the final data
-        return "".join(opening_tags+[data.strip()]+closing_tags).strip()
+        return "".join(opening_tags + [data.strip()] + closing_tags).strip()
 
-    def paste_selection(self, event = None):
+    def paste_selection(self, event=None):
 
         # We can't paste if another paste operation is in progress
         if self.pasting_nodes:
@@ -3459,7 +3456,9 @@ class PlistWindow(tk.Toplevel):
         except:
             # initial load failed -- attempt to massage the clipboard text
             # Let's get all lines that aren't headers/footers
-            clip = "\n".join([c for c in clip.strip().split("\n") if not c.startswith(("<?","<!","<plist ","</plist>"))]).strip()
+            clip = "\n".join(
+                [c for c in clip.strip().split("\n") if not c.startswith(("<?", "<!", "<plist ", "</plist>"))]
+            ).strip()
             corrected = self._walk_tags(clip)
             if corrected is not None:
                 clip = corrected
@@ -3935,7 +3934,9 @@ class PlistWindow(tk.Toplevel):
                     parent = (
                         []
                         if self.get_check_type(p).lower() == "array"
-                        else {} if self.controller.settings.get("sort_dict", False) else OrderedDict()
+                        else {}
+                        if self.controller.settings.get("sort_dict", False)
+                        else OrderedDict()
                     )
             node_stack.append((node, parent))
         # Start walking our stack
@@ -4013,7 +4014,9 @@ class PlistWindow(tk.Toplevel):
             temp_name = (
                 str(name + num)
                 if isinstance(name, (int, long))
-                else name if num == start else name + str(sep) + str(num)
+                else name
+                if num == start
+                else name + str(sep) + str(num)
             )
             if not temp_name in names:
                 break
@@ -4102,7 +4105,9 @@ class PlistWindow(tk.Toplevel):
         new_target = (
             parent
             if not len(remaining)
-            else remaining[target_index] if target_index < len(remaining) else remaining[-1]
+            else remaining[target_index]
+            if target_index < len(remaining)
+            else remaining[-1]
         )
         self.select(new_target, alternate=False)
         self._ensure_edited()
@@ -4494,17 +4499,19 @@ class PlistWindow(tk.Toplevel):
         popup_menu = tk.Menu(self, tearoff=0)
         is_mac = sys.platform == "darwin"
         check_type = self.get_check_type(cell).lower()
-        if check_type in ("array","dictionary","data"):
-            if check_type in ("array","dictionary"):
+        if check_type in ("array", "dictionary", "data"):
+            if check_type in ("array", "dictionary"):
                 popup_menu.add_command(label="Expand Node", command=self.expand_node)
                 popup_menu.add_command(label="Collapse Node", command=self.collapse_node)
                 popup_menu.add_separator()
                 popup_menu.add_command(label="Expand Children", command=self.expand_children)
                 popup_menu.add_command(label="Collapse Children", command=self.collapse_children)
             else:
-                popup_menu.add_command(label="Reverse Endianness{}".format(
-                    " (Cmd+X)" if is_mac else ""
-                ), command=lambda:self.hex_swap(cell), accelerator=None if is_mac else "(Ctrl+X)")
+                popup_menu.add_command(
+                    label="Reverse Endianness{}".format(" (Cmd+X)" if is_mac else ""),
+                    command=lambda: self.hex_swap(cell),
+                    accelerator=None if is_mac else "(Ctrl+X)",
+                )
 
             popup_menu.add_separator()
         popup_menu.add_command(label="Expand All", command=self.expand_all)
@@ -4520,18 +4527,25 @@ class PlistWindow(tk.Toplevel):
                     accelerator=None if is_mac else "(Ctrl +)",
                 )
         else:
-            if self.get_check_type(cell).lower() in ("dictionary","array") and (self._tree.item(cell,"open") or not len(self._tree.get_children(cell))):
-                popup_menu.add_command(label="New child under '{}'{}".format(
-                    self._tree.item(cell,"text"),
-                    " (Cmd +)" if is_mac else ""
-                ), command=lambda:self.new_row(cell),accelerator=None if is_mac else "(Ctrl +)")
-                popup_menu.add_command(label="New sibling of '{}'".format(
-                    self._tree.item(cell,"text")
-                ), command=lambda:self.new_row(cell,True))
-                popup_menu.add_command(label="Remove '{}' and any children{}".format(
-                    self._tree.item(cell,"text"),
-                    " (Cmd -)" if is_mac else "")
-                , command=lambda:self.remove_row(cell),accelerator=None if is_mac else "(Ctrl -)")
+            if self.get_check_type(cell).lower() in ("dictionary", "array") and (
+                self._tree.item(cell, "open") or not len(self._tree.get_children(cell))
+            ):
+                popup_menu.add_command(
+                    label="New child under '{}'{}".format(self._tree.item(cell, "text"), " (Cmd +)" if is_mac else ""),
+                    command=lambda: self.new_row(cell),
+                    accelerator=None if is_mac else "(Ctrl +)",
+                )
+                popup_menu.add_command(
+                    label="New sibling of '{}'".format(self._tree.item(cell, "text")),
+                    command=lambda: self.new_row(cell, True),
+                )
+                popup_menu.add_command(
+                    label="Remove '{}' and any children{}".format(
+                        self._tree.item(cell, "text"), " (Cmd -)" if is_mac else ""
+                    ),
+                    command=lambda: self.remove_row(cell),
+                    accelerator=None if is_mac else "(Ctrl -)",
+                )
 
             else:
                 popup_menu.add_command(
